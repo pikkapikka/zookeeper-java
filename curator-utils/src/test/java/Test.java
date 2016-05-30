@@ -3,7 +3,6 @@ import com.softisland.curator.framework.BotCuratorUtils;
 import org.apache.curator.framework.CuratorFramework;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 
 /**
@@ -46,16 +45,58 @@ public class Test {
         //System.out.println(flag);
 
 
-        List<String> nodes =  BotCuratorUtils.getAllLockedBotsStockQuery(client);
-        Map<String,String> botInfoMap = BotCuratorUtils.getAllOnlineBotsData(client);
+        List<String> nodes =  BotCuratorUtils.getAllUsedBots(client);
+        System.out.println(nodes.size());
+
+        /*BotCuratorUtils.addOffLineBot(client,"76561198297106581","10.172.135.182;a");
+        BotCuratorUtils.addOffLineBot(client,"76561198297108021","10.172.135.182;a");
+        BotCuratorUtils.addOffLineBot(client,"76561198297678052","10.172.135.182;a");
+        BotCuratorUtils.addOffLineBot(client,"76561198299187591","10.172.135.182;a");
+        BotCuratorUtils.addOffLineBot(client,"76561198297806326","10.172.135.182;a");
+        BotCuratorUtils.addOffLineBot(client,"76561198297806457","10.172.135.182;a");
+        BotCuratorUtils.addOffLineBot(client,"76561198297302746","10.172.135.182;a");
+        BotCuratorUtils.addOffLineBot(client,"76561198296564451","10.172.135.182;a");
+        BotCuratorUtils.addOffLineBot(client,"76561198296427694","10.172.135.182;a");
+        BotCuratorUtils.addOffLineBot(client,"76561198297171736","10.172.135.182;a");*/
+
+       /* BotCuratorUtils.addOffLineBot(client,"76561198297106581","10.172.135.182;a");
+
+        BotCuratorUtils.addOffLineBot(client,"76561198297108021","10.172.135.182;a");
+
+        BotCuratorUtils.addOffLineBot(client,"76561198297678052","10.172.135.182;a");
+
+        BotCuratorUtils.addOffLineBot(client,"76561198299187591","10.172.135.182;a");
+
+        BotCuratorUtils.addOffLineBot(client,"76561198297806326","10.172.135.182;a");
+
+        BotCuratorUtils.addOffLineBot(client,"76561198297806457","10.172.135.182;a");
+
+        BotCuratorUtils.addOffLineBot(client,"76561198297302746","10.172.135.182;a");
+
+        BotCuratorUtils.addOffLineBot(client,"76561198296564451","10.172.135.182;a");
+
+        BotCuratorUtils.addOffLineBot(client,"76561198296427694","10.172.135.182;a");
+
+        BotCuratorUtils.addOffLineBot(client,"76561198297171736","10.172.135.182;a");*/
+
+
+        //BotCuratorUtils.addOffLineBot(client,"76561198297678052","10.172.135.182;a");
+
+        //Map<String,String> botInfoMap = BotCuratorUtils.getAllOnlineBotsData(client);
+
+        //BotCuratorUtils.deleUsedBot(client,"76561198297756834");
         nodes.forEach(v-> {
             System.out.println(v);
             try {
-                //BotCuratorUtils.deleOffLineBot(client,"70");
-
+                //System.out.println(BotCuratorUtils.getOffLineBotData(client,v));
             } catch (Exception e) {
                 e.printStackTrace();
             }
+            /*try {
+                BotCuratorUtils.getOffLineBotData(client,v);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }*/
             /*try {
                 if(v.equals("76561198267157839")){
                     BotCuratorUtils.addOffLineBot(client,"76561198267157839","10.172.135.182;a");
@@ -91,13 +132,14 @@ public class Test {
             }*/
         });
         /*botInfoMap.forEach((v,k)->{
-            System.out.println("dd:"+v);
+            System.out.println(v);
             try {
-                BotCuratorUtils.deleBotSession(client,v);
+                //BotCuratorUtils.deleBotInfo(client,v);
             } catch (Exception e) {
                 e.printStackTrace();
             }
         });*/
+        //System.out.println(botInfoMap.containsKey("76561198267097286"));
         //System.out.println(nodes.indexOf("76561198289514405")>-1);
         client.close();
     }

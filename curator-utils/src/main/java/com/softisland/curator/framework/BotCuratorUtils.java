@@ -55,6 +55,11 @@ public class BotCuratorUtils {
      * 在线在用机器人节点
      */
     public static final String USED_BOT_NODE_PATH = "/collect/bot/used";
+
+    /**
+     * 出错的在用机器人节点
+     */
+    public static final String ERROR_BOT_NODE_PATH = "/collect/bot/error";
     /**
      * 锁定的机器人库存查询节点
      */
@@ -423,7 +428,7 @@ public class BotCuratorUtils {
             return true;
         }else{
             log.debug("机器人{}已存在，不添加到离线机器人中，进行数据更新",botId);
-            client.setData().forPath(OFF_LINE_BOT_NODE_PATH+"/"+botId, (data + ";" + System.currentTimeMillis()).getBytes("UTF-8"));
+            client.setData().forPath(OFF_LINE_BOT_NODE_PATH+"/"+botId, (data + ";" + (System.currentTimeMillis()-1*1000*60*22)).getBytes("UTF-8"));
             return true;
         }
     }
@@ -468,6 +473,53 @@ public class BotCuratorUtils {
             }else{
                 log.debug("机器人{}已存在，不添加到正在使用的机器人中",botId);
                 return false;
+            }
+        }finally {
+            locks.releaseLock();
+        }
+    }
+
+    /**
+     * 添加报错的机器人
+     * @param client
+     * @param botId
+     * @return
+     * @throws Exception
+     */
+    public static boolean addErrorBot(CuratorFramework client, String botId) throws Exception {
+        // this will create the given ZNode with the given data
+        CuratorLocks locks = new CuratorLocks(client,ERROR_BOT_NODE_PATH);
+        locks.getLock(10, TimeUnit.SECONDS);
+        log.debug("线程（{}）添加错误的机器人{}，已获得共享锁",getCurThread(),botId);
+        try{
+            if(!isExist(client,ERROR_BOT_NODE_PATH+"/"+botId)){
+                client.create().forPath(ERROR_BOT_NODE_PATH+"/"+botId, botId.getBytes("UTF-8"));
+                log.debug("线程（{}）添加错误的机器人{}，成功！",getCurThread(),botId);
+                return true;
+            }else{
+                log.debug("错误的机器人{}已存在，不添加到正在使用的机器人中",botId);
+                return false;
+            }
+        }finally {
+            locks.releaseLock();
+        }
+    }
+
+    /**
+     * 删除错误的机器人
+     * @param client
+     * @param botId
+     * @throws Exception
+     */
+    public static void deleErrorBot(CuratorFramework client, String botId) throws Exception {
+        // this will create the given ZNode with the given data
+        CuratorLocks locks = new CuratorLocks(client,ERROR_BOT_NODE_PATH);
+        locks.getLock(10, TimeUnit.SECONDS);
+        log.debug("线程（{}）删除错误的机器人{}，已获得共享锁",getCurThread(),botId);
+        try{
+            if(isExist(client,ERROR_BOT_NODE_PATH+"/"+botId)){
+                client.delete().forPath(ERROR_BOT_NODE_PATH+"/"+botId);
+                log.debug("线程（{}）删除错误的的机器人{}，成功！",getCurThread(),botId);
             }
         }finally {
             locks.releaseLock();
