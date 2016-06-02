@@ -428,7 +428,7 @@ public class BotCuratorUtils {
             return true;
         }else{
             log.debug("机器人{}已存在，不添加到离线机器人中，进行数据更新",botId);
-            client.setData().forPath(OFF_LINE_BOT_NODE_PATH+"/"+botId, (data + ";" + (System.currentTimeMillis()-1*1000*60*22)).getBytes("UTF-8"));
+            client.setData().forPath(OFF_LINE_BOT_NODE_PATH+"/"+botId, (data + ";" + System.currentTimeMillis()).getBytes("UTF-8"));
             return true;
         }
     }
@@ -693,6 +693,11 @@ public class BotCuratorUtils {
     public static List<String> getAllSelfBots(CuratorFramework client)throws Exception{
         return client.getChildren().forPath(SELF_BOT_NODE_PATH);
     }
+
+    public static List<String> getAllErrorBots(CuratorFramework client)throws Exception{
+        return client.getChildren().forPath(ERROR_BOT_NODE_PATH);
+    }
+
 
     /**
      * 获取批发机器人
