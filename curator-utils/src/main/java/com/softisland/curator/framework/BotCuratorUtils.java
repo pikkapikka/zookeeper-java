@@ -39,12 +39,16 @@ public class BotCuratorUtils {
      */
     public static final String WHOLE_SALE_BOT_NODE_PATH = "/collect/bot/wholesale";
     /**
-     * 在线并发机器人节点
+     * 在线伪并发机器人节点
      */
     public static final String CONCURRENT_BOT_NODE_PATH = "/collect/bot/concurrent";
+    /**
+     * 在线真实的并发机器人节点
+     */
+    public static final String REAL_CONCURRENT_BOT_NODE_PATH = "/collect/bot/real/concurrent";
 
     /**
-     * 在线并发机器人节点
+     * 在线并发机器人存储库存数量节点
      */
     public static final String CONCURRENT_BOT_STOCKNUM_NODE_PATH = "/collect/bot/stocknum/concurrent";
     /**
@@ -239,6 +243,48 @@ public class BotCuratorUtils {
             if(isExist(client,VIP_BOT_NODE_PATH+"/"+botId)){
                 client.delete().forPath(VIP_BOT_NODE_PATH+"/"+botId);
                 log.debug("线程（{}）删除VIP机器人{}，成功！",getCurThread(),botId);
+            }
+        }finally {
+            locks.releaseLock();
+        }
+    }
+
+    /**
+     * 创建真正的并发机器人节点
+     * @param client
+     * @param botId
+     * @param data
+     * @throws Exception
+     */
+    public static boolean addRealConcurrentBot(CuratorFramework client, String botId,String data) throws Exception {
+        // this will create the given ZNode with the given data
+        if(!isExist(client,REAL_CONCURRENT_BOT_NODE_PATH+"/"+botId)){
+            log.debug("机器人{}不存在，添加到真实的并发账户机器人中",botId);
+            client.create().forPath(REAL_CONCURRENT_BOT_NODE_PATH+"/"+botId, data.getBytes("UTF-8"));
+            log.debug("机器人{}不存在，添加到真实的并发账户机器人，成功！",botId);
+            return true;
+        }else{
+            log.debug("机器人{}已存在，不添加到真实的并发账户机器人中，更新数据",botId);
+            CuratorCrudUtils.setData(client,REAL_CONCURRENT_BOT_NODE_PATH+"/"+botId,data.getBytes("UTF-8"));
+            return false;
+        }
+    }
+
+    /**
+     * 删除真正的并发机器人节点
+     * @param client
+     * @param botId
+     * @throws Exception
+     */
+    public static void deleRealConcurrentBot(CuratorFramework client, String botId) throws Exception {
+        // this will create the given ZNode with the given data
+        CuratorLocks locks = new CuratorLocks(client,REAL_CONCURRENT_BOT_NODE_PATH);
+        locks.getLock(10, TimeUnit.SECONDS);
+        log.debug("线程（{}）删除真实的并发机器人{}，已获得共享锁",getCurThread(),botId);
+        try{
+            if(isExist(client,REAL_CONCURRENT_BOT_NODE_PATH+"/"+botId)){
+                client.delete().forPath(REAL_CONCURRENT_BOT_NODE_PATH+"/"+botId);
+                log.debug("线程（{}）删除真实的并发机器人{}，成功！",getCurThread(),botId);
             }
         }finally {
             locks.releaseLock();
@@ -630,6 +676,15 @@ public class BotCuratorUtils {
     }
 
     /**
+     * 获取所有真正的并发在线机器人节点
+     * @return
+     * @throws Exception
+     */
+    public static List<String> getAllRealConcurrentBots(CuratorFramework client)throws Exception{
+        return client.getChildren().forPath(REAL_CONCURRENT_BOT_NODE_PATH);
+    }
+
+    /**
      * 获取所有VIP在线机器人节点
      * @return
      * @throws Exception
@@ -677,11 +732,15 @@ public class BotCuratorUtils {
         List<String> list2 = getAllVipBots(client);
         List<String> list3 = getAllSelfBots(client);
         List<String> list4 = getWholeSaleBots(client);
+        List<String> list5 = getAllConcurrentBots(client);
+        List<String> list6 = getAllRealConcurrentBots(client);
         List<String> allBot = new ArrayList<>(list1.size()+list2.size()+list3.size());
         allBot.addAll(list1);
         allBot.addAll(list2);
         allBot.addAll(list3);
         allBot.addAll(list4);
+        allBot.addAll(list5);
+        allBot.addAll(list6);
         return allBot;
     }
 
