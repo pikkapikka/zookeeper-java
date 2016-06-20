@@ -25,6 +25,10 @@ public class BotCuratorUtils {
      * 在线普通机器人节点
      */
     public static final String COMMON_BOT_NODE_PATH = "/collect/bot/common";
+    /**
+     * 受限的机器人节点
+     */
+    public static final String DENIED_BOT_NODE_PATH = "/collect/bot/denied";
 
     /**
      * 在线VI机器人节点
@@ -455,8 +459,16 @@ public class BotCuratorUtils {
      * @throws Exception
      */
     public static int getConcurrentBotStockNum(CuratorFramework client, String botId)throws Exception{
-        String numStr = CuratorCrudUtils.getData(client,CONCURRENT_BOT_STOCKNUM_NODE_PATH+"/"+botId);
-        return Integer.valueOf(numStr);
+        if(isExist(client,CONCURRENT_BOT_STOCKNUM_NODE_PATH+"/"+botId)){
+            String numStr = CuratorCrudUtils.getData(client,CONCURRENT_BOT_STOCKNUM_NODE_PATH+"/"+botId);
+            if(null == numStr || "null".equals(numStr)||"".equals(numStr)){
+                return 0;
+            }
+            return Integer.valueOf(numStr);
+        }else{
+            return 0;
+        }
+
     }
 
     /**
@@ -526,6 +538,32 @@ public class BotCuratorUtils {
     }
 
     /**
+     * 添加受限的机器人
+     * @param client
+     * @param botId
+     * @return
+     * @throws Exception
+     */
+    public static boolean addDeniedBot(CuratorFramework client, String botId) throws Exception {
+        // this will create the given ZNode with the given data
+        CuratorLocks locks = new CuratorLocks(client,DENIED_BOT_NODE_PATH);
+        locks.getLock(10, TimeUnit.SECONDS);
+        log.debug("线程（{}）添加正在使用的机器人{}，已获得共享锁",getCurThread(),botId);
+        try{
+            if(!isExist(client,DENIED_BOT_NODE_PATH+"/"+botId)){
+                client.create().forPath(DENIED_BOT_NODE_PATH+"/"+botId, botId.getBytes("UTF-8"));
+                log.debug("线程（{}）添加正在受限的机器人{}，成功！",getCurThread(),botId);
+                return true;
+            }else{
+                log.debug("机器人{}已存在，不添加到受限的机器人中",botId);
+                return false;
+            }
+        }finally {
+            locks.releaseLock();
+        }
+    }
+
+    /**
      * 添加报错的机器人
      * @param client
      * @param botId
@@ -587,6 +625,27 @@ public class BotCuratorUtils {
             if(isExist(client,USED_BOT_NODE_PATH+"/"+botId)){
                 client.delete().forPath(USED_BOT_NODE_PATH+"/"+botId);
                 log.debug("线程（{}）删除正在使用的机器人{}，成功！",getCurThread(),botId);
+            }
+        }finally {
+            locks.releaseLock();
+        }
+    }
+
+    /**
+     * 删除受限的机器人
+     * @param client
+     * @param botId
+     * @throws Exception
+     */
+    public static void deleDeniedBot(CuratorFramework client, String botId) throws Exception {
+        // this will create the given ZNode with the given data
+        CuratorLocks locks = new CuratorLocks(client,DENIED_BOT_NODE_PATH);
+        locks.getLock(10, TimeUnit.SECONDS);
+        log.debug("线程（{}）删除受限的机器人{}，已获得共享锁",getCurThread(),botId);
+        try{
+            if(isExist(client,DENIED_BOT_NODE_PATH+"/"+botId)){
+                client.delete().forPath(DENIED_BOT_NODE_PATH+"/"+botId);
+                log.debug("线程（{}）删除受限的机器人{}，成功！",getCurThread(),botId);
             }
         }finally {
             locks.releaseLock();
@@ -703,6 +762,16 @@ public class BotCuratorUtils {
     }
 
     /**
+     * 获取所有受限的机器人
+     * @param client
+     * @return
+     * @throws Exception
+     */
+    public static List<String> getAllDeniedBots(CuratorFramework client)throws Exception{
+        return client.getChildren().forPath(DENIED_BOT_NODE_PATH);
+    }
+
+    /**
      * 获取所有离线机器人节点
      * @return
      * @throws Exception
@@ -720,6 +789,17 @@ public class BotCuratorUtils {
      */
     public static String getOffLineBotData(CuratorFramework client,String botId)throws Exception{
         return CuratorCrudUtils.getData(client,OFF_LINE_BOT_NODE_PATH+"/"+botId);
+    }
+
+    /**
+     * 获取BOT_INFO的数据
+     * @param client
+     * @param botId
+     * @return
+     * @throws Exception
+     */
+    public static String getBotInfoData(CuratorFramework client,String botId)throws Exception{
+        return CuratorCrudUtils.getData(client,BOT_INFO_NODE_PATH+"/"+botId);
     }
 
     /**
